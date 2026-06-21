@@ -46,6 +46,12 @@ class _EditScreenState extends State<EditScreen> {
         _contentController.text.trim().isEmpty;
   }
 
+  bool get _canSave {
+    final title = _titleController.text.trim();
+    final content = _contentController.text.trim();
+    return title.isNotEmpty && content.isNotEmpty && _hasChanges;
+  }
+
   Future<bool> _onWillPop() async {
     if (!_hasChanges || _isEmpty) return true;
     return await showDialog<bool>(
@@ -104,10 +110,15 @@ class _EditScreenState extends State<EditScreen> {
           actions: [
             Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: IconButton(
-                icon: const Icon(Icons.check),
-                tooltip: 'Save',
-                onPressed: _save,
+              child: ListenableBuilder(
+                listenable: Listenable.merge([_titleController, _contentController]),
+                builder: (context, _) {
+                  return IconButton(
+                    icon: const Icon(Icons.check),
+                    tooltip: 'Save',
+                    onPressed: _canSave ? _save : null,
+                  );
+                },
               ),
             ),
           ],
@@ -127,7 +138,6 @@ class _EditScreenState extends State<EditScreen> {
                   autofocus: true,
                   textInputAction: TextInputAction.next,
                   textCapitalization: TextCapitalization.sentences,
-                  onChanged: (_) => setState(() {}),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Title cannot be empty';
@@ -148,7 +158,12 @@ class _EditScreenState extends State<EditScreen> {
                     expands: true,
                     textAlignVertical: TextAlignVertical.top,
                     textCapitalization: TextCapitalization.sentences,
-                    onChanged: (_) => setState(() {}),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Content cannot be empty';
+                      }
+                      return null;
+                    },
                   ),
                 ),
               ],

@@ -1,4 +1,4 @@
-package com.example.note_pad
+package com.paopaoamns.mypasswordbook
 
 import io.flutter.embedding.android.FlutterActivity
 

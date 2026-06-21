@@ -26,7 +26,7 @@ class NotepadApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => NoteService(),
+      create: (_) => NoteService()..loadNotes(),
       child: MaterialApp(
         title: 'Notepad',
         debugShowCheckedModeBanner: false,

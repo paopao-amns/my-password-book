@@ -16,25 +16,28 @@ class NoteCard extends StatelessWidget {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final dateDay = DateTime(date.year, date.month, date.day);
+    final difference = today.difference(dateDay).inDays;
 
-    final monthNames = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-    ];
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
+    final timeStr = '$hour:$minute';
 
-    if (dateDay == today) {
-      final hour = date.hour.toString().padLeft(2, '0');
-      final minute = date.minute.toString().padLeft(2, '0');
-      return 'Today $hour:$minute';
+    if (difference == 0) {
+      return 'Today $timeStr';
     }
 
-    if (dateDay == today.subtract(const Duration(days: 1))) {
-      final hour = date.hour.toString().padLeft(2, '0');
-      final minute = date.minute.toString().padLeft(2, '0');
-      return 'Yesterday $hour:$minute';
+    if (difference == 1) {
+      return 'Yesterday $timeStr';
     }
 
-    return '${monthNames[date.month - 1]} ${date.day}, ${date.year}';
+    if (difference < 7) {
+      const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      return '${weekdays[date.weekday - 1]} $timeStr';
+    }
+
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '${date.year}-$month-$day $timeStr';
   }
 
   @override

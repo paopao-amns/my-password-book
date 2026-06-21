@@ -6,8 +6,32 @@ import '../services/note_service.dart';
 import '../widgets/note_card.dart';
 import 'edit_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  bool _isSearching = false;
+  String _searchQuery = '';
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<Note> _filterNotes(List<Note> notes) {
+    if (_searchQuery.isEmpty) return notes;
+    final query = _searchQuery.toLowerCase();
+    return notes.where((n) {
+      return n.title.toLowerCase().contains(query) ||
+          n.content.toLowerCase().contains(query);
+    }).toList();
+  }
 
   Future<void> _navigateToEdit(BuildContext context, {Note? note}) async {
     await Navigator.push<bool>(
@@ -40,14 +64,14 @@ class HomeScreen extends StatelessWidget {
   }
 
   void _deleteNote(BuildContext context, NoteService service, Note note) {
-    service.deleteNote(note.id);
+    final deletedIndex = service.deleteNote(note.id);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('"${note.title}" deleted'),
         action: SnackBarAction(
           label: 'Undo',
           onPressed: () {
-            service.addNote(note.title, note.content);
+            service.restoreNote(note, deletedIndex);
           },
         ),
       ),
@@ -61,12 +85,43 @@ class HomeScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notes'),
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  hintText: 'Search notes...',
+                  border: InputBorder.none,
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value;
+                  });
+                },
+              )
+            : const Text('Notes'),
         centerTitle: false,
+        actions: [
+          IconButton(
+            icon: Icon(_isSearching ? Icons.close : Icons.search),
+            tooltip: _isSearching ? 'Close search' : 'Search',
+            onPressed: () {
+              setState(() {
+                _isSearching = !_isSearching;
+                if (!_isSearching) {
+                  _searchController.clear();
+                  _searchQuery = '';
+                }
+              });
+            },
+          ),
+        ],
       ),
-      body: service.noteCount == 0
-          ? _buildEmptyState(theme)
-          : _buildNoteList(context, service, theme),
+      body: !service.isLoaded
+          ? const Center(child: CircularProgressIndicator())
+          : service.noteCount == 0
+              ? _buildEmptyState(theme)
+              : _buildNoteList(context, service, theme),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navigateToEdit(context),
         child: const Icon(Icons.add),
@@ -105,11 +160,35 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildNoteList(
       BuildContext context, NoteService service, ThemeData theme) {
+    final filteredNotes = _filterNotes(service.notes);
+
+    if (filteredNotes.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.search_off,
+              size: 64,
+              color: theme.colorScheme.outline,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No matching notes',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      itemCount: service.noteCount,
+      itemCount: filteredNotes.length,
       itemBuilder: (context, index) {
-        final note = service.notes[index];
+        final note = filteredNotes[index];
         return Padding(
           padding: const EdgeInsets.only(bottom: 4),
           child: Dismissible(
