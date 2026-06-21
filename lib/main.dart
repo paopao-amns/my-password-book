@@ -4,17 +4,6 @@ import 'package:provider/provider.dart';
 import 'services/note_service.dart';
 import 'screens/home_screen.dart';
 
-final _cardTheme = CardThemeData(
-  elevation: 1,
-  shape: RoundedRectangleBorder(
-    borderRadius: BorderRadius.circular(12),
-  ),
-);
-
-const _fabTheme = FloatingActionButtonThemeData(
-  elevation: 2,
-);
-
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const NotepadApp());
@@ -32,13 +21,73 @@ class NotepadApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
-          cardTheme: _cardTheme,
-          floatingActionButtonTheme: _fabTheme,
+          cardTheme: CardThemeData(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            clipBehavior: Clip.antiAlias,
+          ),
+          floatingActionButtonTheme: const FloatingActionButtonThemeData(
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(16)),
+            ),
+          ),
+          inputDecorationTheme: InputDecorationTheme(
+            filled: true,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
+          ),
+          appBarTheme: const AppBarTheme(
+            centerTitle: false,
+            elevation: 0,
+            scrolledUnderElevation: 2,
+          ),
+          listTileTheme: const ListTileThemeData(
+            contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+          ),
         ),
         darkTheme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal, brightness: Brightness.dark),
-          cardTheme: _cardTheme,
-          floatingActionButtonTheme: _fabTheme,
+          cardTheme: CardThemeData(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            clipBehavior: Clip.antiAlias,
+          ),
+          floatingActionButtonTheme: const FloatingActionButtonThemeData(
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(16)),
+            ),
+          ),
+          inputDecorationTheme: InputDecorationTheme(
+            filled: true,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
+          ),
+          appBarTheme: const AppBarTheme(
+            centerTitle: false,
+            elevation: 0,
+            scrolledUnderElevation: 2,
+          ),
+          listTileTheme: const ListTileThemeData(
+            contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+          ),
         ),
         home: const HomeScreen(),
       ),

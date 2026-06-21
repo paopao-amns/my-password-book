@@ -17,10 +17,12 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isSearching = false;
   String _searchQuery = '';
   final _searchController = TextEditingController();
+  final _searchFocusNode = FocusNode();
 
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -46,6 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
+            icon: const Icon(Icons.delete_outline_rounded),
             title: const Text('Delete note?'),
             content: Text('"${note.title}" will be permanently deleted.'),
             actions: [
@@ -53,7 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 onPressed: () => Navigator.pop(ctx, false),
                 child: const Text('Cancel'),
               ),
-              TextButton(
+              FilledButton.tonal(
                 onPressed: () => Navigator.pop(ctx, true),
                 child: const Text('Delete'),
               ),
@@ -68,6 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('"${note.title}" deleted'),
+        behavior: SnackBarBehavior.floating,
         action: SnackBarAction(
           label: 'Undo',
           onPressed: () {
@@ -78,20 +82,40 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _startSearch() {
+    setState(() {
+      _isSearching = true;
+    });
+    _searchFocusNode.requestFocus();
+  }
+
+  void _stopSearch() {
+    setState(() {
+      _isSearching = false;
+      _searchController.clear();
+      _searchQuery = '';
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final service = context.watch<NoteService>();
-    final theme = Theme.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
         title: _isSearching
             ? TextField(
                 controller: _searchController,
+                focusNode: _searchFocusNode,
                 autofocus: true,
-                decoration: const InputDecoration(
+                style: Theme.of(context).textTheme.bodyLarge,
+                decoration: InputDecoration(
                   hintText: 'Search notes...',
+                  hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
                   border: InputBorder.none,
+                  filled: false,
+                  contentPadding: EdgeInsets.zero,
                 ),
                 onChanged: (value) {
                   setState(() {
@@ -99,87 +123,137 @@ class _HomeScreenState extends State<HomeScreen> {
                   });
                 },
               )
-            : const Text('Notes'),
+            : Text(
+                'Notes',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurface,
+                    ),
+              ),
         centerTitle: false,
         actions: [
           IconButton(
-            icon: Icon(_isSearching ? Icons.close : Icons.search),
+            icon: Icon(_isSearching ? Icons.close_rounded : Icons.search_rounded),
             tooltip: _isSearching ? 'Close search' : 'Search',
-            onPressed: () {
-              setState(() {
-                _isSearching = !_isSearching;
-                if (!_isSearching) {
-                  _searchController.clear();
-                  _searchQuery = '';
-                }
-              });
-            },
+            onPressed: _isSearching ? _stopSearch : _startSearch,
           ),
+          const SizedBox(width: 4),
         ],
       ),
       body: !service.isLoaded
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(strokeWidth: 3, color: colorScheme.primary),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Loading notes...',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                  ),
+                ],
+              ),
+            )
           : service.noteCount == 0
-              ? _buildEmptyState(theme)
-              : _buildNoteList(context, service, theme),
+              ? _buildEmptyState(context)
+              : _buildNoteList(context, service),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navigateToEdit(context),
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add_rounded),
       ),
     );
   }
 
-  Widget _buildEmptyState(ThemeData theme) {
+  Widget _buildEmptyState(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.note_add_outlined,
-            size: 64,
-            color: theme.colorScheme.outline,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'No notes yet',
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: colorScheme.primaryContainer,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.edit_note_rounded,
+                size: 40,
+                color: colorScheme.onPrimaryContainer,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Tap + to create your first note',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.outline,
+            const SizedBox(height: 24),
+            Text(
+              'No notes yet',
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 8),
+            Text(
+              'Tap the + button to create your first note',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildNoteList(
-      BuildContext context, NoteService service, ThemeData theme) {
+  Widget _buildNoteList(BuildContext context, NoteService service) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final filteredNotes = _filterNotes(service.notes);
 
     if (filteredNotes.isEmpty) {
       return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.search_off,
-              size: 64,
-              color: theme.colorScheme.outline,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No matching notes',
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHighest,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.search_off_rounded,
+                  size: 40,
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 24),
+              Text(
+                'No matching notes',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  color: colorScheme.onSurface,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Try a different search term',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -190,7 +264,7 @@ class _HomeScreenState extends State<HomeScreen> {
       itemBuilder: (context, index) {
         final note = filteredNotes[index];
         return Padding(
-          padding: const EdgeInsets.only(bottom: 4),
+          padding: const EdgeInsets.only(bottom: 8),
           child: Dismissible(
             key: ValueKey(note.id),
             direction: DismissDirection.endToStart,
@@ -198,12 +272,12 @@ class _HomeScreenState extends State<HomeScreen> {
               alignment: Alignment.centerRight,
               padding: const EdgeInsets.only(right: 24),
               decoration: BoxDecoration(
-                color: theme.colorScheme.errorContainer,
-                borderRadius: BorderRadius.circular(12),
+                color: colorScheme.errorContainer,
+                borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(
-                Icons.delete_outline,
-                color: theme.colorScheme.onErrorContainer,
+                Icons.delete_outline_rounded,
+                color: colorScheme.onErrorContainer,
               ),
             ),
             confirmDismiss: (_) => _confirmDismiss(context, note),

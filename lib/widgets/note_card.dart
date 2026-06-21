@@ -22,14 +22,8 @@ class NoteCard extends StatelessWidget {
     final minute = date.minute.toString().padLeft(2, '0');
     final timeStr = '$hour:$minute';
 
-    if (difference == 0) {
-      return 'Today $timeStr';
-    }
-
-    if (difference == 1) {
-      return 'Yesterday $timeStr';
-    }
-
+    if (difference == 0) return 'Today $timeStr';
+    if (difference == 1) return 'Yesterday $timeStr';
     if (difference < 7) {
       const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
       return '${weekdays[date.weekday - 1]} $timeStr';
@@ -43,45 +37,72 @@ class NoteCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Card(
-      child: ListTile(
-        title: Text(
-          note.title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4),
+      color: colorScheme.surfaceContainerLow,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                note.content.isEmpty ? 'No content' : note.content,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      note.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 20,
+                    color: colorScheme.outline,
+                  ),
+                ],
               ),
-              const SizedBox(height: 4),
-              Text(
-                _formatDate(note.updatedAt),
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.outline,
+              if (note.content.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  note.content,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    height: 1.4,
+                  ),
                 ),
+              ],
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Icon(
+                    Icons.schedule_rounded,
+                    size: 14,
+                    color: colorScheme.outline,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    _formatDate(note.updatedAt),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: colorScheme.outline,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
         ),
-        trailing: Icon(
-          Icons.chevron_right,
-          color: theme.colorScheme.outline,
-        ),
-        onTap: onTap,
       ),
     );
   }

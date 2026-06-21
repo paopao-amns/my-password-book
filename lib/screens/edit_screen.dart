@@ -57,6 +57,7 @@ class _EditScreenState extends State<EditScreen> {
     return await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
+            icon: const Icon(Icons.warning_amber_rounded),
             title: const Text('Discard changes?'),
             content: const Text(
                 'You have unsaved changes. Going back will discard them.'),
@@ -65,7 +66,7 @@ class _EditScreenState extends State<EditScreen> {
                 onPressed: () => Navigator.pop(ctx, false),
                 child: const Text('Keep editing'),
               ),
-              TextButton(
+              FilledButton.tonal(
                 onPressed: () => Navigator.pop(ctx, true),
                 child: const Text('Discard'),
               ),
@@ -93,6 +94,8 @@ class _EditScreenState extends State<EditScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) async {
@@ -109,14 +112,28 @@ class _EditScreenState extends State<EditScreen> {
           centerTitle: false,
           actions: [
             Padding(
-              padding: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.only(right: 12),
               child: ListenableBuilder(
-                listenable: Listenable.merge([_titleController, _contentController]),
+                listenable:
+                    Listenable.merge([_titleController, _contentController]),
                 builder: (context, _) {
-                  return IconButton(
-                    icon: const Icon(Icons.check),
-                    tooltip: 'Save',
+                  return FilledButton(
                     onPressed: _canSave ? _save : null,
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      minimumSize: const Size(0, 40),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.check_rounded, size: 18),
+                        SizedBox(width: 6),
+                        Text('Save'),
+                      ],
+                    ),
                   );
                 },
               ),
@@ -124,16 +141,18 @@ class _EditScreenState extends State<EditScreen> {
           ],
         ),
         body: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           child: Form(
             key: _formKey,
             child: Column(
               children: [
                 TextFormField(
                   controller: _titleController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Title',
-                    border: OutlineInputBorder(),
+                    hintText: 'Enter note title',
+                    prefixIcon: const Icon(Icons.title_rounded),
+                    fillColor: colorScheme.surfaceContainerLow,
                   ),
                   autofocus: true,
                   textInputAction: TextInputAction.next,
@@ -149,9 +168,14 @@ class _EditScreenState extends State<EditScreen> {
                 Expanded(
                   child: TextFormField(
                     controller: _contentController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Content',
-                      border: OutlineInputBorder(),
+                      hintText: 'Write your note here...',
+                      prefixIcon: const Padding(
+                        padding: EdgeInsets.only(bottom: 120),
+                        child: Icon(Icons.edit_note_rounded),
+                      ),
+                      fillColor: colorScheme.surfaceContainerLow,
                       alignLabelWithHint: true,
                     ),
                     maxLines: null,
