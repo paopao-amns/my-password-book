@@ -31,24 +31,15 @@ class NotepadApp extends StatelessWidget {
         title: 'Notepad',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.teal,
-            brightness: Brightness.light,
-          ),
-          useMaterial3: true,
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
           cardTheme: _cardTheme,
           floatingActionButtonTheme: _fabTheme,
         ),
         darkTheme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.teal,
-            brightness: Brightness.dark,
-          ),
-          useMaterial3: true,
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal, brightness: Brightness.dark),
           cardTheme: _cardTheme,
           floatingActionButtonTheme: _fabTheme,
         ),
-        themeMode: ThemeMode.system,
         home: const HomeScreen(),
       ),
     );

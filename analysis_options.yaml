@@ -15,7 +15,6 @@ linter:
     cancel_subscriptions: true
     close_sinks: true
     constant_identifier_names: true
-    control_flow_in_finally_blocks: true
     empty_catches: true
     empty_constructor_bodies: true
     empty_statements: true
